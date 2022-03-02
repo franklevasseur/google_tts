@@ -1,6 +1,7 @@
 import axios from "axios";
 import _ from "lodash";
 import Bluebird from "bluebird";
+import chalk from "chalk";
 
 const MAX_CHUNK_LEN = 200;
 
@@ -9,7 +10,7 @@ const fetchSingleChunkTTS = async (
   content: string
 ): Promise<Buffer> => {
   try {
-    console.log("Fetching for", content);
+    console.log("Fetching for", chalk.blueBright(content));
     const { data } = await axios.get(
       "https://translate.google.com/translate_tts",
       {
@@ -31,6 +32,9 @@ const fetchSingleChunkTTS = async (
   }
 };
 
+const splitSentences = (str: string): string[] =>
+  str.replace(/([.?!])\s*(?=[\wа-я])/gi, "$1|").split("|");
+
 const chunkString = (str: string, n: number): string[] =>
   _.chunk(str, n).map((c) => c.join(""));
 
@@ -38,9 +42,12 @@ export const fetchTTS = async (
   lang: string,
   content: string
 ): Promise<Buffer> => {
-  const chunks = _(content.split("\n"))
+  const lines = content.split("\n").filter((x) => !!x);
+  const chunks = _(lines)
+    .flatMap((line) => splitSentences(line))
+    .flatMap((sentence) => chunkString(sentence, MAX_CHUNK_LEN))
+    .map((x) => x.trim())
     .filter((x) => !!x)
-    .flatMap((line) => chunkString(line, MAX_CHUNK_LEN))
     .value();
   console.log("Chunks to fetch:", chunks.length);
   const buffers: Buffer[] = await Bluebird.map(chunks, (c) =>
