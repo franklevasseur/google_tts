@@ -31,15 +31,17 @@ const fetchSingleChunkTTS = async (
   }
 };
 
+const chunkString = (str: string, n: number): string[] =>
+  _.chunk(str, n).map((c) => c.join(""));
+
 export const fetchTTS = async (
   lang: string,
   content: string
 ): Promise<Buffer> => {
-  content = content
-    .split("\n")
+  const chunks = _(content.split("\n"))
     .filter((x) => !!x)
-    .join("");
-  const chunks = _.chunk(content, MAX_CHUNK_LEN).map((c) => c.join(""));
+    .flatMap((line) => chunkString(line, MAX_CHUNK_LEN))
+    .value();
   console.log("Chunks to fetch:", chunks.length);
   const buffers: Buffer[] = await Bluebird.map(chunks, (c) =>
     fetchSingleChunkTTS(lang, c)
