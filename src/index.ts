@@ -4,7 +4,7 @@ import chalk from "chalk";
 
 yargs
   .command(
-    ["fetch <content>", "$0 <content>"],
+    ["fetch", "$0"],
     "Fetches TTS mp3 file",
     {
       lang: {
@@ -17,9 +17,17 @@ yargs
         alias: "o",
         required: true,
       },
+      content: {
+        type: "string",
+        alias: "c",
+      },
+      input: {
+        type: "string",
+        alias: "i",
+      },
     },
     (argv) => {
-      void main(argv as any)
+      void main(argv)
         .then(() => console.log(chalk.greenBright("Done.")))
         .catch((err) => console.log(chalk.redBright("Error:"), err));
     }

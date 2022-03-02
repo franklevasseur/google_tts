@@ -9,6 +9,7 @@ const fetchSingleChunkTTS = async (
   content: string
 ): Promise<Buffer> => {
   try {
+    console.log("Fetching for", content);
     const { data } = await axios.get(
       "https://translate.google.com/translate_tts",
       {
@@ -34,7 +35,12 @@ export const fetchTTS = async (
   lang: string,
   content: string
 ): Promise<Buffer> => {
+  content = content
+    .split("\n")
+    .filter((x) => !!x)
+    .join("");
   const chunks = _.chunk(content, MAX_CHUNK_LEN).map((c) => c.join(""));
+  console.log("Chunks to fetch:", chunks.length);
   const buffers: Buffer[] = await Bluebird.map(chunks, (c) =>
     fetchSingleChunkTTS(lang, c)
   );
